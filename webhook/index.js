@@ -44,10 +44,17 @@ function handleEvent(event) {
                 text: event.message.text
             });
         case 'follow':
-            return client.replyMessage(event.replyToken, {
+            return client.replyMessage(event.replyToken, [{
                 type: 'text',
-                text: 'はじめまして！'
-            });
+                text: 'CoderDojo 太宰府をお友だちに追加していただき、ありがとうございます\uDBC0\uDC2D\nこのアカウントからは、CoderDojo 太宰府の開催のお知らせや、お子様、保護者の皆様にとって有用な情報を発信していきたいと思っています\uDBC0\uDC61'
+            }, {
+                type: 'text',
+                text: 'チャンピオン(主宰)の三木です\uDBC0\uDC03\nまず、LINEのアカウント名だと、どなたかわからないことがあるので、あなたのお名前をフルネームで教えてください\uDBC0\uDC02\n左下のキーボードから入力するか、メニューの「登録情報」から登録いただけます\uDBC0\uDC41',
+                sender: {
+                    name: "チャンピオン 三木",
+                    iconUrl: "https://p62.f2.n0.cdn.getcloudapp.com/items/04uPNLeG/59UcuxelIy3u3Nc1584956046_1584956055.png?v=c586b91712e6400e8055dc46c7f30ac9",
+                }
+            }]);
         case 'unfollow':
             return Promise.resolve(null);
         case 'join':
