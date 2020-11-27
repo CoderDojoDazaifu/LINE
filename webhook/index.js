@@ -60,35 +60,24 @@ function handleEvent(event) {
         case 'message':
             const msg = event.message.text;
             const userId = event.source.userId;
-
-            var conn = new tedConn(tedConfig);  
-            conn.on('connect', function(err) {  
-                if (err) {
-                    console.log("Not Connected");  
-                    return client.replyMessage(event.replyToken, {
-                        type: 'text',
-                        text: 'ERROR:' + err.stack
-                    });    
-                }
-                // If no error, then good to proceed.  
-                console.log("Connected");  
+            const displayName = event.source.displayName;
+            const check = checkUserId(userId);
+            check.then((callback) => {
+                console.log(callback);
                 return client.replyMessage(event.replyToken, {
                     type: 'text',
                     text: userId
                 });
             });
-    
+            console.log(check);
+
+
             // UserIdでDBを検索し、名前が登録されているかどうか確認する
             // 名前が登録されていない場合
             // 言語解析で名前だけを抽出する
             // 名前が登録されている場合
-/*
-            return client.replyMessage(event.replyToken, {
-                type: 'text',
-                text: userId
-            });
-*/
-            case 'follow':
+            break;
+        case 'follow':
             return client.replyMessage(event.replyToken, [{
                 type: 'text',
                 text: 'CoderDojo 太宰府をお友だちに追加していただき、ありがとうございます\uDBC0\uDC2D\nこのアカウントからは、CoderDojo 太宰府の開催のお知らせや、お子様、保護者の皆様にとって有用な情報を発信していきたいと思っています\uDBC0\uDC61'
@@ -114,6 +103,56 @@ function handleEvent(event) {
         default:
             throw new Error('Unknown event');
     }
+}
+
+function checkUserId(userId) {
+
+    return new Promise(function(callback) {
+        var conn = new tedConn(tedConfig);  
+        conn.on('connect', function(err) {  
+            if (err) {
+                console.log("Not Connected:" + err.stack);
+                throw err;
+            }
+            // If no error, then good to proceed.  
+            console.log("Connected");
+
+            var query = "SELECT UserName FROM M_User WHERE UserId = @UserId";
+            var arr = [];
+            var colCount = 1; // 取得する列数
+
+            var queryrequest = new tedReq(query, function(err) {
+                if (err) {
+                    console.log(err.stack);
+                } else {
+                    console.log(arr[0][0]);
+                }
+            });
+
+            // 検索条件の指定
+            queryrequest.addParameter('UserId', tedTYPES.NVarChar, userId);
+
+            queryrequest.on('row', function(columns) {
+                var record = new Array(colCount);
+                var i = 0;
+                columns.forEach(function(column) {
+                    record[i++] = column.value;
+                    console.log(column.metadata.colName + ": " + column.value);
+                });
+                arr.push(record);
+            });
+
+            queryrequest.on('requestCompleted', function(rowCount, more) {
+                console.log(arr.length + ' rows found');  
+                console.log(rowCount + ' rows returned');
+                conn.close();
+                console.log('UserId:' + userId);
+                callback(rowCount > 0);
+            });
+
+            conn.execSql(queryrequest);
+        });
+    });
 }
 
 module.exports = createHandler(app);
